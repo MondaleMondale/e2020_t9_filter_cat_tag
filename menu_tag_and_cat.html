@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            color: #3c3c3c;
+        }
+
+        .tagBTN {
+            color: #00ff9d;
+            /*            border: 1px solid grey;*/
+            /*
+                -webkit-text-stroke: .5px black;
+            -webkit-text-fill-color: white;
+*/
+        }
+
+
+
+        .overskrift,
+        nav {
+            margin: 0 auto;
+            width: 80vw
+        }
+
+        .retter {
+
+            margin: 0 auto;
+            width: 80vw;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-gap: 20px;
+        }
+
+        img {
+            width: 100%;
+        }
+
+        h2 {
+
+            height: 60px;
+            margin: 0;
+        }
+
+        .filter_nav {
+            display: flex;
+        }
+
+        .filter_nav h3 {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .ret {
+            cursor: pointer;
+
+        }
+
+        .valgt {
+
+            color: orangered;
+        }
+
+        .valgtkat {
+
+            outline: 1px solid orangered;
+        }
+
+    </style>
+</head>
+
+<body>
+    <!-- TEMPLATES  -->
+    <template id="filter_btns_tmpl">
+        <h3>Huop</h3>
+    </template>
+
+    <template id="course_header_tmpl">
+        <h1>Huop</h1>
+        <section class="course_section"></section>
+    </template>
+
+    <template id="ret_tmpl">
+        <section class="ret">
+            <h2></h2>
+            <div></div>
+            <img src="" alt="">
+            <p id="short_text"></p>
+            <p id="price"></p>
+        </section>
+    </template>
+
+    <!-- SITE MENU-->
+    <h1 class="overskrift"></h1>
+    <nav>
+        <a href="index.html">Hjem</a>
+        <a href="menu.html">Menu</a>
+        <a href="about.html">Om os</a>
+        <a href="contact.html">Kontakt</a>
+
+    </nav>
+
+
+
+    <!--   Filter  btns -->
+    <nav class="filter_nav">
+        <!--        <h3 class="catBTN" data-is-it-cat="true">Alle</h3>-->
+    </nav>
+    <!--  Dishes  -->
+    <main class="retter"></main>
+
+
+    <script>
+        "use strict"
+
+        let theCategories;
+        let categoryFilter;
+        let theTags;
+        let theDishes;
+        let theMedia;
+
+        let tagArray = [];
+
+        //        let currentSearch;
+
+        document.addEventListener("DOMContentLoaded", start);
+
+        function start() {
+
+            getTheCategories();
+        }
+        async function getTheCategories() {
+            let url = "http://mandalskeawebspace.dk/babushkaWP/wordpress/wp-json/wp/v2/categories";
+            let jsonData = await fetch(url);
+            theCategories = await jsonData.json();
+            generateCategoryBTNs(theCategories, true);
+            getTheTags();
+
+
+        }
+        async function getTheTags() {
+            let url = "http://mandalskeawebspace.dk/babushkaWP/wordpress/wp-json/wp/v2/tags";
+            let jsonData = await fetch(url);
+            theTags = await jsonData.json();
+            generateCategoryBTNs(theTags, false);
+
+            getTheDishes();
+
+
+        }
+
+
+        async function getTheDishes() {
+
+            let url = "https://mandalskeawebspace.dk/babushkaWP/wordpress/wp-json/wp/v2/mineRetter?per_page=100";
+            let jsonData = await fetch(url);
+            theDishes = await jsonData.json();
+
+            //            theDishes.forEach((ret)=>{
+            //                ret.categories.push("alle");
+            //                console.log("categories",ret.categories);
+            //            });
+            getTheMedia();
+
+        }
+        async function getTheMedia() {
+            let url = "http://mandalskeawebspace.dk/babushkaWP/wordpress/wp-json/wp/v2/media?per_page=100";
+            let jsonData = await fetch(url);
+            theMedia = await jsonData.json();
+            console.log("LOADING DONE");
+            document.querySelector(".filter_nav h3").click();
+            console.log("singleMedia", theMedia.filter(elm => elm.id === 110)[0].media_details.sizes.thumbnail.source_url);
+            //            theMedia.forEach((elm)=>{console.log(elm.id)})
+            console.log("theMedia", theMedia);
+        }
+
+        function generateCategoryBTNs(theJson, isItCat) {
+
+            let dest = document.querySelector(".filter_nav");
+            let temp = document.querySelector("#filter_btns_tmpl");
+
+            //            document.querySelector(".filter_nav h3").dataset.id = "alle";
+            //            document.querySelector(".filter_nav h3").addEventListener("click", categoryClick);
+            theJson.forEach(category => {
+                // fjern uncategorised
+                if (category.slug != "uncategorised") {
+                    let klon = temp.cloneNode(true).content;
+                    klon.querySelector("h3").textContent = category.name;
+                    klon.querySelector("h3").dataset.name = category.name;
+                    klon.querySelector("h3").dataset.id = category.id;
+
+                    klon.querySelector("h3").dataset.isItCat = isItCat;
+                    if (isItCat == true) {
+
+                        klon.querySelector("h3").classList.add("catBTN");
+                    } else {
+
+                        klon.querySelector("h3").classList.add("tagBTN");
+                    }
+
+
+                    klon.querySelector("h3").addEventListener("click", categoryClick)
+                    dest.appendChild(klon);
+                }
+
+            })
+        }
+
+
+
+        function categoryClick() {
+
+
+
+            if (this.dataset.isItCat == "true") {
+                document.querySelectorAll(".filter_nav .catBTN").forEach(each => each.classList.remove("valgt"));
+                this.classList.add("valgt");
+                categoryFilter = this.dataset.id;
+            } else {
+                console.log("Er denne valgt?", this.classList.contains("valgtkat"));
+                if (this.classList.contains("valgtkat")) {
+
+                    this.classList.remove("valgtkat");
+                    const index = tagArray.indexOf(Number(this.dataset.id));
+                    if (index > -1) {
+                        tagArray.splice(index, 1);
+                    }
+                } else {
+                    this.classList.add("valgtkat");
+                    tagArray.push(Number(this.dataset.id));
+                }
+
+
+
+
+            }
+            console.log("tagArray", tagArray);
+            filterContent();
+
+        }
+
+
+        function filterContent() {
+
+            let filtrerede;
+
+            filtrerede = theDishes.filter(ret => {
+                return ret.categories.some(elm => elm == categoryFilter)
+            });
+
+            if (tagArray.length > 0) {
+                filtrerede = filtrerede.filter(ret => {
+                    return tagArray.every((val) => ret.tags.indexOf(val) !== -1);
+                })
+            }
+
+            showPosts(filtrerede);
+        }
+
+
+        function showPosts(theFilteredJson) {
+            let dest = document.querySelector(".retter");
+            let temp = document.querySelector("#ret_tmpl");
+            dest.innerHTML = "";
+            theFilteredJson.forEach(ret => {
+                //                console.log(ret)
+                let klon = temp.cloneNode(true).content;
+                klon.querySelector("h2").textContent = ret.title.rendered;
+                //                console.log("img ID",ret.billede.ID);
+                //                console.log("img ID",ret.billede.pod_item_id);
+                //                console.log("*********************");
+                //klon.querySelector("img").src = ret.billede.guid;
+                console.log("Hallo", ret.slug);
+                console.log("Hallo", ret.id);
+                console.log("billede id", ret.billede.pod_item_id)
+                console.log("find element", theMedia.filter(elm => elm.id === Number(ret.billede.pod_item_id)))
+                klon.querySelector("img").src = theMedia.filter(elm => elm.id === Number(ret.billede.pod_item_id))[0].media_details.sizes.medium.source_url;
+
+                klon.querySelector("#short_text").textContent = ret.kort;
+                klon.querySelector("#price").textContent = ret.pris + " $";
+                klon.querySelector(".ret").addEventListener("click", function() {
+                    dishClick(ret.id)
+                });
+                dest.appendChild(klon);
+
+            });
+
+
+        }
+
+        function dishClick(id) {
+            //  console.log("ID", id);
+            location.href = "singleview.html?id=" + id;
+        }
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loop and Page content</title>
+    <style></style>
+</head>
+
+<body>
+
+
+    <template>
+        <section class="ret">
+            <h2></h2>
+            <div></div>
+            <img src="" alt="">
+        </section>
+    </template>
+
+
+
+    <h1 class="overskrift"></h1>
+    <nav>
+      <a href="index.html">Hjem</a>
+        <a href="menu.html">Menu</a>
+        <a href="about.html">Om os</a>
+        <a href="contact.html">Kontakt</a>
+<!--        <a href="dishes.html">Retter</a>-->
+
+    </nav>
+    <h3 class="indhold"></h3>
+    <main class="retter"></main>
+
+
+
+
+    <script>
+        "use strict"
+        let indhold;
+        let retter;
+        document.addEventListener("DOMContentLoaded", start);
+
+        function start() {
+            async function getJson() {
+                console.log("numero uno");
+                let url = "http://mandalskeawebspace.dk/babushkaWP/wordpress/wp-json/wp/v2/pages/75";
+                let jsonData = await fetch(url);
+                indhold = await jsonData.json();
+                visIndhold();
+            };
+
+            function visIndhold() {
+                document.querySelector(".overskrift").textContent = indhold.title.rendered;
+                document.querySelector(".indhold").innerHTML = indhold.content.rendered;
+            }
+
+            getJson();
+            async function getJson2() {
+                console.log("numero due");
+                let url = "https://mandalskeawebspace.dk/babushkaWP/wordpress/wp-json/wp/v2/mineRetter";
+                let jsonData = await fetch(url);
+                retter = await jsonData.json();
+
+                visRetter();
+            };
+
+            function visRetter() {
+                let dest = document.querySelector(".retter");
+                let temp = document.querySelector("template");
+                retter.forEach(ret => {
+                    let klon = temp.cloneNode(true).content;
+                    klon.querySelector("img").src = ret.billede.guid;
+                    dest.appendChild(klon);
+                })
+            }
+            getJson2();
+        }
+
+
+// DRY VERSION
+
+
+        //        let loadArray = [{
+        //            theUrl: "http://mandalskeawebspace.dk/babushkaWP/wordpress/wp-json/wp/v2/pages/75",
+        //            theFunction: visIndhold
+        //        }, {
+        //            theUrl: "https://mandalskeawebspace.dk/babushkaWP/wordpress/wp-json/wp/v2/mineRetter",
+        //            theFunction: visRetter
+        //        }]
+        //        let indhold;
+        //
+        //        let loadIterator = 0;
+        //        document.addEventListener("DOMContentLoaded", start);
+        //
+        //        function start() {
+        //            getJson(loadArray[loadIterator]);
+        //
+        //            async function getJson(obj) {
+        //                console.log("numero uno");
+        //                let url = obj.theUrl;
+        //                let jsonData = await fetch(url);
+        //                indhold = await jsonData.json();
+        //                obj.theFunction();
+        //                loadIterator++;
+        //                if (loadIterator < loadArray.length) {
+        //
+        //                    getJson(loadArray[loadIterator]);
+        //                }
+        //            };
+        //        }
+        //
+        //        function visIndhold() {
+        //            document.querySelector(".overskrift").textContent = indhold.title.rendered;
+        //            document.querySelector(".indhold").innerHTML = indhold.content.rendered;
+        //        }
+        //
+        //        function visRetter() {
+        //            console.log("VIS RETTER");
+        //            let dest = document.querySelector(".retter");
+        //            let temp = document.querySelector("template");
+        //            indhold.forEach(ret => {
+        //                let klon = temp.cloneNode(true).content;
+        //                klon.querySelector("img").src = ret.billede.guid;
+        //                dest.appendChild(klon);
+        //            })
+        //        }
+    </script>
+</body>
+
+</html>
